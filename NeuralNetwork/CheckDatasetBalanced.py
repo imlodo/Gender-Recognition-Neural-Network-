@@ -20,8 +20,7 @@ def checkBalanced(dataset):
     # Nella stampa 0:numb indica il numero di immagini di uomini e 1:numb il numero di immagini di donne
     print("\n", counter_dict, "\n")
     for i in counter_dict:
-        print(
-            f"{i}:{counter_dict[i] / count_total * 100.0}%\n")  # stampiamo in percentuale l'incidenza dei due tipi di immagini
+        print(f"{i}:{counter_dict[i] / count_total * 100.0}%\n")  # stampiamo in percentuale l'incidenza dei due tipi di immagini
     time.sleep(3)
 
 #__________________Qui testiamo se il dataset di traning è bilanciato______________
