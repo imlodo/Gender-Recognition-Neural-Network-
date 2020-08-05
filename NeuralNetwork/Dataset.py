@@ -1,5 +1,6 @@
 #Load datasets
 import torchvision
+from torch.utils import data
 from torchvision import transforms
 train_data_path = "../Dataset/train"
 transforms = transforms.Compose([
@@ -23,4 +24,8 @@ val_data = torchvision.datasets.ImageFolder(root=val_data_path, transform=transf
 test_data_path = "../Dataset/test"
 test_data = torchvision.datasets.ImageFolder(root=test_data_path,transform=transforms) #dataset di test della nostra rete neurale
 
-
+#DataLoaders
+batch_size = 64 #numero di immagini passate alla rete neurale ogni iterazione
+train_data_loader = data.DataLoader(train_data,batch_size=batch_size)
+val_data_loader = data.DataLoader(val_data,batch_size=batch_size)
+test_data_loader = data.DataLoader(test_data,batch_size=batch_size)
