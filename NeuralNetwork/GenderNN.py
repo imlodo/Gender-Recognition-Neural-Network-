@@ -93,9 +93,9 @@ if REBUILD_DATA:
     train(gendernet, optimizer, torch.nn.CrossEntropyLoss(), train_data_loader, val_data_loader, epochs=EPOCHS,
           device=deviceSelected)
     # Saving Models
-    torch.save("../model/gendernet")
+    torch.save(gendernet,"gendernet.pth")
 
-gendernet = torch.load("../model/gendernet")
+gendernet = torch.load("gendernet.pth")
 
 # Making predictions
 labels = ['man', 'woman']
@@ -104,3 +104,4 @@ img = img_transforms(img).to(deviceSelected)
 prediction = F.softmax(gendernet(img))
 prediction = prediction.argmax()
 print(labels[prediction])
+
