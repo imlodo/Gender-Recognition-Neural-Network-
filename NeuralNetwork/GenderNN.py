@@ -1,3 +1,6 @@
+import os
+import shutil
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -10,12 +13,14 @@ from tqdm import tqdm
 from NeuralNetwork.Dataset import img_transforms
 import cv2
 
-REBUILD_DATA = False
+REBUILD_DATA = True
 
 # Qui controlliamo se è presente una GPU per eseguire calcoli più veloci
 if torch.cuda.is_available():
+    print("GPU available")
     deviceSelected = torch.device("cuda")
 else:
+    print("GPU not available")
     deviceSelected = torch.device("cpu")
 
 
@@ -97,11 +102,47 @@ if REBUILD_DATA:
 
 gendernet = torch.load("gendernet.pth")
 
-# Making predictions
+# # Making predictions
 labels = ['man', 'woman']
-img = Image.open("../Dataset/test/Man/WhatsApp Image 2020-08-03 at 10.40.53.jpeg")
-img = img_transforms(img).to(deviceSelected)
-prediction = F.softmax(gendernet(img))
-prediction = prediction.argmax()
-print(labels[prediction])
+# img = Image.open("../Dataset/test/Man/WhatsApp Image 2020-08-03 at 10.40.53.jpeg")
+# img = img_transforms(img).to(deviceSelected)
+# prediction = F.softmax(gendernet(img))
+# prediction = prediction.argmax()
+# print(labels[prediction])
+#
+# for i in range(10000,300000,1):
+#     try:
+#         if i < 10000:
+#             img = Image.open("../Dataset/not/00"+str(i)+".jpg")
+#             img = img_transforms(img).to(deviceSelected)
+#             prediction = F.softmax(gendernet(img))
+#             prediction = prediction.argmax()
+#             print(labels[prediction], "\n")
+#             if labels[prediction] == "man":
+#                 os.rename("../Dataset/not/00" + str(i) + ".jpg", "../Dataset/man/00" + str(i) + ".jpg")
+#                 shutil.move("../Dataset/not/00" + str(i) + ".jpg", "../Dataset/man/00" + str(i) + ".jpg")
+#                 os.replace("../Dataset/not/00" + str(i) + ".jpg", "../Dataset/man/00" + str(i) + ".jpg")
+#             else:
+#                 os.rename("../Dataset/not/00" + str(i) + ".jpg", "../Dataset/woman/00" + str(i) + ".jpg")
+#                 shutil.move("../Dataset/not/00" + str(i) + ".jpg", "../Dataset/woman/00" + str(i) + ".jpg")
+#                 os.replace("../Dataset/not/00" + str(i) + ".jpg", "../Dataset/woman/00" + str(i) + ".jpg")
+#         if i > 9999:
+#             img = Image.open("../Dataset/not/" + str(i) + ".jpg")
+#             img = img_transforms(img).to(deviceSelected)
+#             prediction = F.softmax(gendernet(img))
+#             prediction = prediction.argmax()
+#             print(labels[prediction], "\n")
+#             if labels[prediction] == "man":
+#                 os.rename("../Dataset/not/" + str(i) + ".jpg", "../Dataset/man/" + str(i) + ".jpg")
+#                 shutil.move("../Dataset/not/" + str(i) + ".jpg", "../Dataset/man/" + str(i) + ".jpg")
+#                 os.replace("../Dataset/not/" + str(i) + ".jpg", "../Dataset/man/" + str(i) + ".jpg")
+#             else:
+#                 os.rename("../Dataset/not/" + str(i) + ".jpg", "../Dataset/woman/" + str(i) + ".jpg")
+#                 shutil.move("../Dataset/not/" + str(i) + ".jpg", "../Dataset/woman/" + str(i) + ".jpg")
+#                 os.replace("../Dataset/not/" + str(i) + ".jpg", "../Dataset/woman/" + str(i) + ".jpg")
+#
+#     except Exception as e:
+#         print("Immagine ../Dataset/not/0"+str(i)+".jpg" + " non esistente\n", e)
+#         pass
+
 
