@@ -1,6 +1,7 @@
+#Definizione di una rete neurale fully connected
+
 import os
 import shutil
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -13,7 +14,8 @@ from tqdm import tqdm
 from NeuralNetwork.Dataset import img_transforms
 import cv2
 
-REBUILD_DATA = True
+REBUILD_DATA = False
+EPOCHS = 30
 
 # Qui controlliamo se è presente una GPU per eseguire calcoli più veloci
 if torch.cuda.is_available():
@@ -44,7 +46,7 @@ class GenderNet(nn.Module):
 
 
 # Creiamo la funzione di training della nostra rete neurale
-def train(model, opt, lossFn, train_loader, val_loader, epochs=10, device="cpu"):
+def train(model, opt, lossFn, train_loader, val_loader, epochs=10, device="cuda"):
     for epoch in range(epochs):
         training_loss = 0.0
         valid_loss = 0.0
@@ -93,56 +95,40 @@ if REBUILD_DATA:
     # Per eseguire update dei pesi della rete neurale bisogna utilizzare un optimizer
     optimizer = optim.Adam(gendernet.parameters(), lr=0.001)  # gendernet.parameters() sono i pesi della rete neurale
     # Training
-    EPOCHS = 15
     # Call train function
     train(gendernet, optimizer, torch.nn.CrossEntropyLoss(), train_data_loader, val_data_loader, epochs=EPOCHS,
           device=deviceSelected)
     # Saving Models
-    torch.save(gendernet,"gendernet.pth")
+    torch.save(gendernet, "gendernet.pth")
 
 gendernet = torch.load("gendernet.pth")
 
 # # Making predictions
 labels = ['man', 'woman']
-# img = Image.open("../Dataset/test/Man/WhatsApp Image 2020-08-03 at 10.40.53.jpeg")
-# img = img_transforms(img).to(deviceSelected)
-# prediction = F.softmax(gendernet(img))
-# prediction = prediction.argmax()
-# print(labels[prediction])
-#
-# for i in range(10000,300000,1):
-#     try:
-#         if i < 10000:
-#             img = Image.open("../Dataset/not/00"+str(i)+".jpg")
-#             img = img_transforms(img).to(deviceSelected)
-#             prediction = F.softmax(gendernet(img))
-#             prediction = prediction.argmax()
-#             print(labels[prediction], "\n")
-#             if labels[prediction] == "man":
-#                 os.rename("../Dataset/not/00" + str(i) + ".jpg", "../Dataset/man/00" + str(i) + ".jpg")
-#                 shutil.move("../Dataset/not/00" + str(i) + ".jpg", "../Dataset/man/00" + str(i) + ".jpg")
-#                 os.replace("../Dataset/not/00" + str(i) + ".jpg", "../Dataset/man/00" + str(i) + ".jpg")
-#             else:
-#                 os.rename("../Dataset/not/00" + str(i) + ".jpg", "../Dataset/woman/00" + str(i) + ".jpg")
-#                 shutil.move("../Dataset/not/00" + str(i) + ".jpg", "../Dataset/woman/00" + str(i) + ".jpg")
-#                 os.replace("../Dataset/not/00" + str(i) + ".jpg", "../Dataset/woman/00" + str(i) + ".jpg")
-#         if i > 9999:
-#             img = Image.open("../Dataset/not/" + str(i) + ".jpg")
-#             img = img_transforms(img).to(deviceSelected)
-#             prediction = F.softmax(gendernet(img))
-#             prediction = prediction.argmax()
-#             print(labels[prediction], "\n")
-#             if labels[prediction] == "man":
-#                 os.rename("../Dataset/not/" + str(i) + ".jpg", "../Dataset/man/" + str(i) + ".jpg")
-#                 shutil.move("../Dataset/not/" + str(i) + ".jpg", "../Dataset/man/" + str(i) + ".jpg")
-#                 os.replace("../Dataset/not/" + str(i) + ".jpg", "../Dataset/man/" + str(i) + ".jpg")
-#             else:
-#                 os.rename("../Dataset/not/" + str(i) + ".jpg", "../Dataset/woman/" + str(i) + ".jpg")
-#                 shutil.move("../Dataset/not/" + str(i) + ".jpg", "../Dataset/woman/" + str(i) + ".jpg")
-#                 os.replace("../Dataset/not/" + str(i) + ".jpg", "../Dataset/woman/" + str(i) + ".jpg")
-#
-#     except Exception as e:
-#         print("Immagine ../Dataset/not/0"+str(i)+".jpg" + " non esistente\n", e)
-#         pass
 
+img = Image.open("../Dataset/test/Man/WhatsApp Image 2020-08-03 at 10.40.53.jpeg")
+img = img_transforms(img).to(deviceSelected)
+prediction = F.softmax(gendernet(img))
+prediction = prediction.argmax()
+print(labels[prediction])
 
+path = "../Dataset/not"
+arr = os.listdir(path)
+for k in arr:
+    try:
+        img = Image.open(path + "/" + k)
+        img = img_transforms(img).to(deviceSelected)
+        prediction = F.softmax(gendernet(img))
+        prediction = prediction.argmax()
+        print(labels[prediction], "\n")
+        if labels[prediction] == "man":
+            os.rename(path + "/" + k, "../Dataset/man/" + k)
+            shutil.move(path + "/" + k, "../Dataset/man/" + k)
+            os.replace(path + "/" + k, "../Dataset/man/" + k)
+        else:
+            os.rename(path + "/" + k, "../Dataset/woman/" + k)
+            shutil.move(path + "/" + k, "../Dataset/woman/" + k)
+            os.replace(path + "/" + k, "../Dataset/woman/" + k)
+    except Exception as e:
+        print(e)
+        pass
