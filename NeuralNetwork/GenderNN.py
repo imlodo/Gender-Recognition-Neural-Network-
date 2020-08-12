@@ -1,7 +1,7 @@
-#Definizione di una rete neurale fully connected
-
+# Definizione di una rete neurale fully connected
 import os
-import shutil
+from NeuralNetwork.Training import train
+from NeuralNetwork.Utils import checkGPUAvailable
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -9,22 +9,13 @@ import torch.optim as optim
 from PIL import Image
 from NeuralNetwork.Dataset import train_data_loader
 from NeuralNetwork.Dataset import val_data_loader
-from NeuralNetwork.Dataset import test_data_loader
-from tqdm import tqdm
 from NeuralNetwork.Dataset import img_transforms
-import cv2
 
 REBUILD_DATA = False
 EPOCHS = 30
 
 # Qui controlliamo se è presente una GPU per eseguire calcoli più veloci
-if torch.cuda.is_available():
-    print("GPU available")
-    deviceSelected = torch.device("cuda")
-else:
-    print("GPU not available")
-    deviceSelected = torch.device("cpu")
-
+deviceSelected = checkGPUAvailable()
 
 # Creating a Neural Network class
 class GenderNet(nn.Module):
@@ -44,52 +35,6 @@ class GenderNet(nn.Module):
         x = self.fc3(x)
         return x
 
-
-# Creiamo la funzione di training della nostra rete neurale
-def train(model, opt, lossFn, train_loader, val_loader, epochs=10, device="cuda"):
-    for epoch in range(epochs):
-        training_loss = 0.0
-        valid_loss = 0.0
-        model.train()
-        num_correct = 0
-        num_examples = 0
-        for batch in tqdm(train_loader):
-            # azzera i gradienti calcolati per il batch successivo altrimenti, il batch successivo dovrà occuparsi inutilmente anche dei gradienti già calcolati nel batch precedente.
-            opt.zero_grad()
-            inputs, targets = batch
-            inputs = inputs.to(device)
-            targets = targets.to(device)
-            output = model(inputs)  # previsione rete neurale
-            loss = lossFn(output, targets)  # calcolo perdità NN
-            loss.backward()  # calcolo dei gradienti
-            opt.step()  # ottimizzazione dei pesi per questo step
-            correct = torch.eq(torch.max(F.softmax(output), dim=1)[1], targets).view(-1)
-            num_correct += torch.sum(correct).item()
-            num_examples += correct.shape[0]
-            training_loss += loss.data.item() * inputs.size(0)
-        training_loss /= len(train_loader.dataset)
-        print('\nEpoch: {}, Training Loss: {:.2f}, accuracy = {:.2f}\n'.
-              format(epoch, training_loss * 100, num_correct / num_examples * 100))
-
-        model.eval()
-        num_correct = 0
-        num_examples = 0
-        for batch in tqdm(val_loader):
-            input, target = batch
-            input = input.to(device)
-            output = model(input)
-            target = target.to(device)
-            loss = lossFn(output, target)
-            valid_loss += loss.data.item() * input.size(0)
-            correct = torch.eq(torch.max(F.softmax(output), dim=1)[1], target).view(-1)
-            num_correct += torch.sum(correct).item()
-            num_examples += correct.shape[0]
-        valid_loss /= len(val_loader.dataset)
-
-        print('\nEpoch: {}, Validation Loss: {:.2f}, accuracy = {:.2f}\n'.
-              format(epoch, valid_loss * 100, num_correct / num_examples * 100))
-
-
 if REBUILD_DATA:
     gendernet = GenderNet().to(deviceSelected)
     # Per eseguire update dei pesi della rete neurale bisogna utilizzare un optimizer
@@ -103,32 +48,39 @@ if REBUILD_DATA:
 
 gendernet = torch.load("gendernet.pth")
 
-# # Making predictions
-labels = ['man', 'woman']
-
-img = Image.open("../Dataset/test/Man/WhatsApp Image 2020-08-03 at 10.40.53.jpeg")
-img = img_transforms(img).to(deviceSelected)
-prediction = F.softmax(gendernet(img))
-prediction = prediction.argmax()
-print(labels[prediction])
-
-path = "../Dataset/not"
+# Making predictions
+path = "../Dataset/test/"
 arr = os.listdir(path)
-for k in arr:
-    try:
-        img = Image.open(path + "/" + k)
-        img = img_transforms(img).to(deviceSelected)
-        prediction = F.softmax(gendernet(img))
-        prediction = prediction.argmax()
-        print(labels[prediction], "\n")
-        if labels[prediction] == "man":
-            os.rename(path + "/" + k, "../Dataset/man/" + k)
-            shutil.move(path + "/" + k, "../Dataset/man/" + k)
-            os.replace(path + "/" + k, "../Dataset/man/" + k)
-        else:
-            os.rename(path + "/" + k, "../Dataset/woman/" + k)
-            shutil.move(path + "/" + k, "../Dataset/woman/" + k)
-            os.replace(path + "/" + k, "../Dataset/woman/" + k)
-    except Exception as e:
-        print(e)
-        pass
+labels = ['man', 'woman']
+for folder in arr:
+    for img in os.listdir(path + folder):
+        try:
+            print("Name: " + img, end=" ------------- ")
+            img = Image.open(path + folder + "/" + img)
+            img = img_transforms(img).to(deviceSelected)
+            prediction = F.softmax(gendernet(img))
+            prediction = prediction.argmax()
+            print("Prediction: " + labels[prediction])
+        except UserWarning as uw:
+            pass
+
+# path = "../Dataset/not"
+# arr = os.listdir(path)
+# for k in arr:
+#     try:
+#         img = Image.open(path + "/" + k)
+#         img = img_transforms(img).to(deviceSelected)
+#         prediction = F.softmax(gendernet(img))
+#         prediction = prediction.argmax()
+#         print(labels[prediction], "\n")
+#         if labels[prediction] == "man":
+#             os.rename(path + "/" + k, "../Dataset/man/" + k)
+#             shutil.move(path + "/" + k, "../Dataset/man/" + k)
+#             os.replace(path + "/" + k, "../Dataset/man/" + k)
+#         else:
+#             os.rename(path + "/" + k, "../Dataset/woman/" + k)
+#             shutil.move(path + "/" + k, "../Dataset/woman/" + k)
+#             os.replace(path + "/" + k, "../Dataset/woman/" + k)
+#     except Exception as e:
+#         print(e)
+#         pass
