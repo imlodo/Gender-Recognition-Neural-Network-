@@ -1,22 +1,21 @@
 #Definizione di una rete neurale convoluzionale
 import os
-
+import shutil
 import torch
 import torch.nn as nn
 from PIL import Image
-
 from NeuralNetwork.Utils import checkGPUAvailable
-import torch.functional as F
+import torch.nn.functional as F
 import torch.optim as optim
 from NeuralNetwork.Training import train
 from NeuralNetwork.Dataset import train_data_loader
 from NeuralNetwork.Dataset import val_data_loader
 from NeuralNetwork.Dataset import img_transforms
 
-REBUILD_DATA = True
+REBUILD_DATA = False
 EPOCHS = 30
 # Qui controlliamo se è presente una GPU per eseguire calcoli più veloci
-deviceSelected = checkGPUAvailable()
+# deviceSelected = checkGPUAvailable()
 
 class GenderCNN(nn.Module):
     def __init__(self, num_classes = 2):
@@ -55,19 +54,19 @@ class GenderCNN(nn.Module):
         return x
 
 if REBUILD_DATA:
-    genderCNN = GenderCNN().to(deviceSelected)
+    genderCNN = GenderCNN().to("cuda")
     # Per eseguire update dei pesi della rete neurale bisogna utilizzare un optimizer
     optimizer = optim.Adam(genderCNN.parameters(), lr=0.001)  # gendernet.parameters() sono i pesi della rete neurale
     # Training
     # Call train function
     train(genderCNN, optimizer, torch.nn.CrossEntropyLoss(), train_data_loader, val_data_loader, epochs=EPOCHS,
-          device=deviceSelected)
+          device="cuda")
     # Saving Models
     torch.save(genderCNN, "genderCNN.pth")
 
 genderCNN = torch.load("genderCNN.pth")
 
-# Making predictions
+ # Making predictions
 path = "../Dataset/test/"
 arr = os.listdir(path)
 labels = ['man', 'woman']
@@ -76,9 +75,32 @@ for folder in arr:
         try:
             print("Name: " + img, end=" ------------- ")
             img = Image.open(path + folder + "/" + img)
-            img = img_transforms(img).to(deviceSelected)
-            prediction = F.softmax(genderCNN(img))
+            img = img_transforms(img).to("cuda")
+            img = img.view(-1,3,64,64)
+            prediction = F.softmax(genderCNN(img), dim=1)
             prediction = prediction.argmax()
             print("Prediction: " + labels[prediction])
         except UserWarning as uw:
             pass
+
+# path = "../Dataset/not"
+# arr = os.listdir(path)
+# for k in arr:
+#     try:
+#         img = Image.open(path + "/" + k)
+#         img = img_transforms(img).to(deviceSelected)
+#         img = img.view(-1, 3, 64, 64)
+#         prediction = F.softmax(genderCNN(img))
+#         prediction = prediction.argmax()
+#         print(labels[prediction], "\n")
+#         if labels[prediction] == "man":
+#             os.rename(path + "/" + k, "../Dataset/man/" + k)
+#             shutil.move(path + "/" + k, "../Dataset/man/" + k)
+#             os.replace(path + "/" + k, "../Dataset/man/" + k)
+#         else:
+#             os.rename(path + "/" + k, "../Dataset/woman/" + k)
+#             shutil.move(path + "/" + k, "../Dataset/woman/" + k)
+#             os.replace(path + "/" + k, "../Dataset/woman/" + k)
+#     except Exception as e:
+#         print(e)
+#         pass
