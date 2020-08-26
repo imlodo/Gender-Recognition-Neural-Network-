@@ -55,8 +55,8 @@ class GenderCNN(nn.Module):
 
 if REBUILD_DATA:
     genderCNN = GenderCNN().to("cuda")
-    # Per eseguire update dei pesi della rete neurale bisogna utilizzare un optimizer
-    optimizer = optim.Adam(genderCNN.parameters(), lr=0.001)  # gendernet.parameters() sono i pesi della rete neurale
+    # Per eseguire update dei pesi della rete neurale bisogna utilizzare un optimizer, 1.3e-8 = 0.000000013
+    optimizer = optim.Adam(genderCNN.parameters(), lr=1.3e-8)  # gendernet.parameters() sono i pesi della rete neurale
     # Training
     # Call train function
     train(genderCNN, optimizer, torch.nn.CrossEntropyLoss(), train_data_loader, val_data_loader, epochs=EPOCHS,

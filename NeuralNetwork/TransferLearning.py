@@ -29,7 +29,7 @@ deviceSelected = checkGPUAvailable()
 if REBUILD_DATA:
     transfer_model = transfer_model.to(deviceSelected)
     # Per eseguire update dei pesi della rete neurale bisogna utilizzare un optimizer
-    optimizer = torch.optim.Adam(transfer_model.parameters(), lr=0.001)  # gendernet.parameters() sono i pesi della rete neurale
+    optimizer = torch.optim.Adam(transfer_model.parameters(), lr=1.3e-8)  # gendernet.parameters() sono i pesi della rete neurale
     # Training
     # Call train function
     train(transfer_model, optimizer, torch.nn.CrossEntropyLoss(), train_data_loader, val_data_loader, epochs=EPOCHS,
