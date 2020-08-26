@@ -1,4 +1,4 @@
-#Definizione di una rete neurale convoluzionale
+# Definizione di una rete neurale convoluzionale
 import os
 import shutil
 import torch
@@ -14,14 +14,16 @@ from NeuralNetwork.Dataset import img_transforms
 
 REBUILD_DATA = False
 EPOCHS = 30
+
+
 # Qui controlliamo se è presente una GPU per eseguire calcoli più veloci
-# deviceSelected = checkGPUAvailable()
+deviceSelected = checkGPUAvailable()
 
 class GenderCNN(nn.Module):
-    def __init__(self, num_classes = 2):
+    def __init__(self, num_classes=2):
         super(GenderCNN, self).__init__()
         self.features = nn.Sequential(
-            nn.Conv2d(3,64,kernel_size=11,stride=4,padding=2),
+            nn.Conv2d(3, 64, kernel_size=11, stride=4, padding=2),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=3, stride=2),
             nn.Conv2d(64, 192, kernel_size=5, padding=2),
@@ -53,6 +55,7 @@ class GenderCNN(nn.Module):
         x = self.classifier(x)
         return x
 
+
 if REBUILD_DATA:
     genderCNN = GenderCNN().to("cuda")
     # Per eseguire update dei pesi della rete neurale bisogna utilizzare un optimizer, 1.3e-8 = 0.000000013
@@ -66,7 +69,7 @@ if REBUILD_DATA:
 
 genderCNN = torch.load("genderCNN.pth")
 
- # Making predictions
+# Making predictions
 path = "../Dataset/test/"
 arr = os.listdir(path)
 labels = ['man', 'woman']
@@ -76,7 +79,7 @@ for folder in arr:
             print("Name: " + img, end=" ------------- ")
             img = Image.open(path + folder + "/" + img)
             img = img_transforms(img).to("cuda")
-            img = img.view(-1,3,64,64)
+            img = img.view(-1, 3, 64, 64)
             prediction = F.softmax(genderCNN(img), dim=1)
             prediction = prediction.argmax()
             print("Prediction: " + labels[prediction])
